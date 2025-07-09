@@ -40,7 +40,7 @@ push constant 82
 or
 not
 '''
-
+lineCount = 0
 def Parser(line):
     commandType = str()
     arg1 = str()
@@ -61,6 +61,7 @@ def Parser(line):
 def CodeWriter(command):
 
     output = ''
+    global lineCount
 
     if command[0] == 'C_PUSH':
         segment = command[1] #doesn't actually need to do anything when using the constant segment. Might need some extra logic for that in the future...
@@ -72,8 +73,70 @@ def CodeWriter(command):
         'M=D\n' \
         '@SP\n' \
         'M=M+1\n' % index
+        return output
 
-    if command[0] == 'C_ARITHMETIC': #I think this one here is right.
+    match command[1]:
+        case 'add':
+            output += '@SP\n' \
+            'M=M-1\n' \
+            'A=M\n' \
+            'D=M\n' \
+            '@SP\n' \
+            'M=M-1\n' \
+            'A=M\n' \
+            'A=M\n' \
+            'D=D+A\n' \
+            '@SP\n' \
+            'A=M\n' \
+            'M=D\n' \
+            '@SP\n' \
+            'M=M+1\n'
+
+        case 'sub':
+            output += '@SP\n' \
+            'M=M-1\n' \
+            'A=M\n' \
+            'D=M\n' \
+            '@SP\n' \
+            'M=M-1\n' \
+            'A=M\n' \
+            'A=M\n' \
+            'D=A-D\n' \
+            '@SP\n' \
+            'A=M\n' \
+            'M=D\n' \
+            '@SP\n' \
+            'M=M+1\n'
+
+        case 'neg':
+            output += '@SP' + '\n' \
+            'M=M-1' + '\n' \
+            'A=M' + '\n' \
+            'M=-M' + '\n' \
+            '@SP' + '\n' \
+            'M=M+1' + '\n'
+
+        #comparisons: -1 = true, 0 = false
+        #do something with the global variable to make sure labels don't repeat
+        case 'eq':
+            ...
+
+        case 'gt':
+            ...
+
+        case 'lt':
+            ...
+
+        case 'and':
+            ...
+
+        case 'or':
+            ...
+
+        case 'not':
+            ...
+
+    '''if command[0] == 'C_ARITHMETIC': #I think this one here is right.
         output += '@SP\n' \
         'M=M-1\n' \
         'A=M\n' \
@@ -88,6 +151,7 @@ def CodeWriter(command):
         'M=D\n' \
         '@SP\n' \
         'M=M+1\n'
+        '''
 
     return output
 
@@ -100,9 +164,10 @@ def EndCode():
 def VMTranslator():
     filename = input("Please input file name without extension: ")
     output = ''
+    global lineCount
     with open(filename + ".vm", 'r') as bytecode:
         with open(filename + ".asm", 'w') as machineCode:
-            for line in bytecode:
+            for lineCount, line in enumerate(bytecode):
                 command = Parser(line)
                 if command:
                     output = CodeWriter(command)
