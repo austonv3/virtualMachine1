@@ -40,6 +40,7 @@ push constant 82
 or
 not
 '''
+
 lineCount = 0
 def Parser(line):
     commandType = str()
@@ -54,7 +55,6 @@ def Parser(line):
         else:
             commandType = 'C_ARITHMETIC'
             arg1 = arguments[0]
-        print(commandType, arg1, arg2)
 
     return commandType, arg1, arg2
 
@@ -117,15 +117,86 @@ def CodeWriter(command):
             'M=M+1' + '\n'
 
         #comparisons: -1 = true, 0 = false
-        #do something with the global variable to make sure labels don't repeat
         case 'eq':
-            ...
+            global lineCount
+            output += '@SP\n' \
+              'M=M-1\n' \
+              'A=M\n' \
+              'D=M\n' \
+              '@SP\n' \
+              'M=M-1\n' \
+              'A=M\n' \
+              'A=M\n' \
+              'D=A-D\n' \
+              f'@EQ{lineCount}\n' \
+              'D;JEQ\n' \
+              '@SP\n' \
+              'A=M\n' \
+              'M=0\n' \
+              '@SP\n' \
+              'M=M+1\n' \
+              f'@FINISH{lineCount}\n' \
+              f'(EQ{lineCount})\n' \
+              '@SP\n' \
+              'A=M\n' \
+              'M=-1\n' \
+              '@SP\n' \
+              'M=M+1\n' \
+              f'(FINISH{lineCount})'
 
         case 'gt':
-            ...
+            global lineCount
+            output += '@SP\n' \
+                      'M=M-1\n' \
+                      'A=M\n' \
+                      'D=M\n' \
+                      '@SP\n' \
+                      'M=M-1\n' \
+                      'A=M\n' \
+                      'A=M\n' \
+                      'D=A-D\n' \
+                      f'@GT{lineCount}\n' \
+                      'D;JGT\n' \
+                      '@SP\n' \
+                      'A=M\n' \
+                      'M=0\n' \
+                      '@SP\n' \
+                      'M=M+1\n' \
+                      f'@FINISH{lineCount}\n' \
+                      f'(GT{lineCount})\n' \
+                      '@SP\n' \
+                      'A=M\n' \
+                      'M=-1\n' \
+                      '@SP\n' \
+                      'M=M+1\n' \
+                      f'(FINISH{lineCount})'
 
         case 'lt':
-            ...
+            global lineCount
+            output += '@SP\n' \
+                      'M=M-1\n' \
+                      'A=M\n' \
+                      'D=M\n' \
+                      '@SP\n' \
+                      'M=M-1\n' \
+                      'A=M\n' \
+                      'A=M\n' \
+                      'D=A-D\n' \
+                      f'@LT{lineCount}\n' \
+                      'D;JLT\n' \
+                      '@SP\n' \
+                      'A=M\n' \
+                      'M=0\n' \
+                      '@SP\n' \
+                      'M=M+1\n' \
+                      f'@FINISH{lineCount}\n' \
+                      f'(LT{lineCount})\n' \
+                      '@SP\n' \
+                      'A=M\n' \
+                      'M=-1\n' \
+                      '@SP\n' \
+                      'M=M+1\n' \
+                      f'(FINISH{lineCount})'
 
         case 'and':
             ...
