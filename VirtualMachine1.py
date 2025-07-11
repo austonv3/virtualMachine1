@@ -40,8 +40,6 @@ push constant 82
 or
 not
 '''
-
-lineCount = 0
 def Parser(line):
     commandType = str()
     arg1 = str()
@@ -58,10 +56,9 @@ def Parser(line):
 
     return commandType, arg1, arg2
 
-def CodeWriter(command):
+def CodeWriter(command, linecount):
 
     output = ''
-    global lineCount
 
     if command[0] == 'C_PUSH':
         segment = command[1] #doesn't actually need to do anything when using the constant segment. Might need some extra logic for that in the future...
@@ -118,7 +115,6 @@ def CodeWriter(command):
 
         #comparisons: -1 = true, 0 = false
         case 'eq':
-            global lineCount
             output += '@SP\n' \
               'M=M-1\n' \
               'A=M\n' \
@@ -128,24 +124,23 @@ def CodeWriter(command):
               'A=M\n' \
               'A=M\n' \
               'D=A-D\n' \
-              f'@EQ{lineCount}\n' \
+              f'@EQ{linecount}\n' \
               'D;JEQ\n' \
               '@SP\n' \
               'A=M\n' \
               'M=0\n' \
               '@SP\n' \
               'M=M+1\n' \
-              f'@FINISH{lineCount}\n' \
-              f'(EQ{lineCount})\n' \
+              f'@FINISH{linecount}\n' \
+              f'(EQ{linecount})\n' \
               '@SP\n' \
               'A=M\n' \
               'M=-1\n' \
               '@SP\n' \
               'M=M+1\n' \
-              f'(FINISH{lineCount})'
+              f'(FINISH{linecount})'
 
         case 'gt':
-            global lineCount
             output += '@SP\n' \
                       'M=M-1\n' \
                       'A=M\n' \
@@ -155,24 +150,23 @@ def CodeWriter(command):
                       'A=M\n' \
                       'A=M\n' \
                       'D=A-D\n' \
-                      f'@GT{lineCount}\n' \
+                      f'@GT{linecount}\n' \
                       'D;JGT\n' \
                       '@SP\n' \
                       'A=M\n' \
                       'M=0\n' \
                       '@SP\n' \
                       'M=M+1\n' \
-                      f'@FINISH{lineCount}\n' \
-                      f'(GT{lineCount})\n' \
+                      f'@FINISH{linecount}\n' \
+                      f'(GT{linecount})\n' \
                       '@SP\n' \
                       'A=M\n' \
                       'M=-1\n' \
                       '@SP\n' \
                       'M=M+1\n' \
-                      f'(FINISH{lineCount})'
+                      f'(FINISH{linecount})'
 
         case 'lt':
-            global lineCount
             output += '@SP\n' \
                       'M=M-1\n' \
                       'A=M\n' \
@@ -182,21 +176,21 @@ def CodeWriter(command):
                       'A=M\n' \
                       'A=M\n' \
                       'D=A-D\n' \
-                      f'@LT{lineCount}\n' \
+                      f'@LT{linecount}\n' \
                       'D;JLT\n' \
                       '@SP\n' \
                       'A=M\n' \
                       'M=0\n' \
                       '@SP\n' \
                       'M=M+1\n' \
-                      f'@FINISH{lineCount}\n' \
-                      f'(LT{lineCount})\n' \
+                      f'@FINISH{linecount}\n' \
+                      f'(LT{linecount})\n' \
                       '@SP\n' \
                       'A=M\n' \
                       'M=-1\n' \
                       '@SP\n' \
                       'M=M+1\n' \
-                      f'(FINISH{lineCount})'
+                      f'(FINISH{linecount})'
 
         case 'and':
             ...
@@ -235,13 +229,12 @@ def EndCode():
 def VMTranslator():
     filename = input("Please input file name without extension: ")
     output = ''
-    global lineCount
     with open(filename + ".vm", 'r') as bytecode:
         with open(filename + ".asm", 'w') as machineCode:
             for lineCount, line in enumerate(bytecode):
                 command = Parser(line)
                 if command:
-                    output = CodeWriter(command)
+                    output = CodeWriter(command, lineCount)
                 if output:
                     machineCode.write(output)
             end = EndCode()
