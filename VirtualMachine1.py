@@ -192,14 +192,46 @@ def CodeWriter(command, linecount):
                       'M=M+1\n' \
                       f'(FINISH{linecount})'
 
-        case 'and':
-            ...
+        case 'and': #you know I could have just gone ahead and written a Pop function. And a push...
+            output += '@SP\n' \
+            'M=M-1\n' \
+            'A=M\n' \
+            'D=M\n' \
+            '@SP\n' \
+            'M=M-1\n' \
+            'A=M\n' \
+            'A=M\n' \
+            'D=D&A\n' \
+            '@SP\n' \
+            'A=M\n' \
+            'M=D\n' \
+            '@SP\n' \
+            'M=M+1\n'
 
         case 'or':
-            ...
+            output += '@SP\n' \
+              'M=M-1\n' \
+              'A=M\n' \
+              'D=M\n' \
+              '@SP\n' \
+              'M=M-1\n' \
+              'A=M\n' \
+              'A=M\n' \
+              'D=D|A\n' \
+              '@SP\n' \
+              'A=M\n' \
+              'M=D\n' \
+              '@SP\n' \
+              'M=M+1\n'
 
         case 'not':
-            ...
+            output += '@SP\n' \
+            'M=M-1\n' \
+            'A=M\n' \
+            'D=!A\n' \
+            'M=D\n' \
+            '@SP\n' \
+            'M=M+1\n'
 
     '''if command[0] == 'C_ARITHMETIC': #I think this one here is right.
         output += '@SP\n' \
