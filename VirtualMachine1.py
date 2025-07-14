@@ -125,11 +125,10 @@ def CodeWriter(command, linecount):
               'M=-1\n' \
               '@SP\n' \
               'M=M+1\n' \
-              f'(FINISH{linecount})\n'''
+              f'(FINISH{linecount})\n'
 
         case 'gt':
             output += pop('D') + pop('A') + 'D=A-D\n' \
-                      'D=A-D\n' \
                       f'@GT{linecount}\n' \
                       'D;JGT\n' \
                       '@SP\n' \
@@ -138,13 +137,14 @@ def CodeWriter(command, linecount):
                       '@SP\n' \
                       'M=M+1\n' \
                       f'@FINISH{linecount}\n' \
+                      '0;JMP\n' \
                       f'(GT{linecount})\n' \
                       '@SP\n' \
                       'A=M\n' \
                       'M=-1\n' \
                       '@SP\n' \
                       'M=M+1\n' \
-                      f'(FINISH{linecount})\n'''
+                      f'(FINISH{linecount})\n'
 
         case 'lt':
             output += pop('D') + pop('A') + 'D=A-D\n' \
@@ -156,6 +156,7 @@ def CodeWriter(command, linecount):
                       '@SP\n' \
                       'M=M+1\n' \
                       f'@FINISH{linecount}\n' \
+                      '0;JMP\n' \
                       f'(LT{linecount})\n' \
                       '@SP\n' \
                       'A=M\n' \
