@@ -40,6 +40,19 @@ push constant 82
 or
 not
 '''
+
+def pop(targetRegister):
+    output = '@SP\n' \
+    'M=M-1\n' \
+    'A=M\n'
+    if targetRegister == 'A':
+        output += 'A=M\n'
+    elif targetRegister == 'D':
+        output += 'D=M\n'
+    else:
+        raise Exception('Sorry, the strings "A" and "D" are the only valid inputs')
+    return output
+
 def Parser(line):
     commandType = str()
     arg1 = str()
@@ -74,15 +87,7 @@ def CodeWriter(command, linecount):
 
     match command[1]:
         case 'add':
-            output += '@SP\n' \
-            'M=M-1\n' \
-            'A=M\n' \
-            'D=M\n' \
-            '@SP\n' \
-            'M=M-1\n' \
-            'A=M\n' \
-            'A=M\n' \
-            'D=D+A\n' \
+            output += pop('D') + pop('A') + 'D=D+A\n' \
             '@SP\n' \
             'A=M\n' \
             'M=D\n' \
@@ -90,40 +95,21 @@ def CodeWriter(command, linecount):
             'M=M+1\n'
 
         case 'sub':
-            output += '@SP\n' \
-            'M=M-1\n' \
-            'A=M\n' \
-            'D=M\n' \
-            '@SP\n' \
-            'M=M-1\n' \
-            'A=M\n' \
-            'A=M\n' \
-            'D=A-D\n' \
+            output += pop('D') + pop('A') + 'D=A-D\n' \
             '@SP\n' \
             'A=M\n' \
             'M=D\n' \
             '@SP\n' \
-            'M=M+1\n'
+            'M=M+1\n'''
 
         case 'neg':
-            output += '@SP' + '\n' \
-            'M=M-1' + '\n' \
-            'A=M' + '\n' \
-            'M=-M' + '\n' \
+            output += pop('D') + 'M=-D\n' \
             '@SP' + '\n' \
             'M=M+1' + '\n'
 
         #comparisons: -1 = true, 0 = false
         case 'eq':
-            output += '@SP\n' \
-              'M=M-1\n' \
-              'A=M\n' \
-              'D=M\n' \
-              '@SP\n' \
-              'M=M-1\n' \
-              'A=M\n' \
-              'A=M\n' \
-              'D=A-D\n' \
+            output += pop('D') + pop('A') + 'D=A-D\n' \
               f'@EQ{linecount}\n' \
               'D;JEQ\n' \
               '@SP\n' \
@@ -132,23 +118,17 @@ def CodeWriter(command, linecount):
               '@SP\n' \
               'M=M+1\n' \
               f'@FINISH{linecount}\n' \
+              '0;JMP\n' \
               f'(EQ{linecount})\n' \
               '@SP\n' \
               'A=M\n' \
               'M=-1\n' \
               '@SP\n' \
               'M=M+1\n' \
-              f'(FINISH{linecount})'
+              f'(FINISH{linecount})\n'''
 
         case 'gt':
-            output += '@SP\n' \
-                      'M=M-1\n' \
-                      'A=M\n' \
-                      'D=M\n' \
-                      '@SP\n' \
-                      'M=M-1\n' \
-                      'A=M\n' \
-                      'A=M\n' \
+            output += pop('D') + pop('A') + 'D=A-D\n' \
                       'D=A-D\n' \
                       f'@GT{linecount}\n' \
                       'D;JGT\n' \
@@ -164,18 +144,10 @@ def CodeWriter(command, linecount):
                       'M=-1\n' \
                       '@SP\n' \
                       'M=M+1\n' \
-                      f'(FINISH{linecount})'
+                      f'(FINISH{linecount})\n'''
 
         case 'lt':
-            output += '@SP\n' \
-                      'M=M-1\n' \
-                      'A=M\n' \
-                      'D=M\n' \
-                      '@SP\n' \
-                      'M=M-1\n' \
-                      'A=M\n' \
-                      'A=M\n' \
-                      'D=A-D\n' \
+            output += pop('D') + pop('A') + 'D=A-D\n' \
                       f'@LT{linecount}\n' \
                       'D;JLT\n' \
                       '@SP\n' \
@@ -190,34 +162,18 @@ def CodeWriter(command, linecount):
                       'M=-1\n' \
                       '@SP\n' \
                       'M=M+1\n' \
-                      f'(FINISH{linecount})'
+                      f'(FINISH{linecount})\n'
 
-        case 'and': #you know I could have just gone ahead and written a Pop function. And a push...
-            output += '@SP\n' \
-            'M=M-1\n' \
-            'A=M\n' \
-            'D=M\n' \
-            '@SP\n' \
-            'M=M-1\n' \
-            'A=M\n' \
-            'A=M\n' \
-            'D=D&A\n' \
+        case 'and':
+            output += pop('D') + pop('A') + 'D=D&A\n' \
             '@SP\n' \
             'A=M\n' \
             'M=D\n' \
             '@SP\n' \
-            'M=M+1\n'
+            'M=M+1\n'''
 
         case 'or':
-            output += '@SP\n' \
-              'M=M-1\n' \
-              'A=M\n' \
-              'D=M\n' \
-              '@SP\n' \
-              'M=M-1\n' \
-              'A=M\n' \
-              'A=M\n' \
-              'D=D|A\n' \
+            output += pop('D') + pop('A') + 'D=D|A\n' \
               '@SP\n' \
               'A=M\n' \
               'M=D\n' \
@@ -225,30 +181,10 @@ def CodeWriter(command, linecount):
               'M=M+1\n'
 
         case 'not':
-            output += '@SP\n' \
-            'M=M-1\n' \
-            'A=M\n' \
-            'D=!A\n' \
+            output += pop('D') + 'D=!D\n' \
             'M=D\n' \
             '@SP\n' \
             'M=M+1\n'
-
-    '''if command[0] == 'C_ARITHMETIC': #I think this one here is right.
-        output += '@SP\n' \
-        'M=M-1\n' \
-        'A=M\n' \
-        'D=M\n' \
-        '@SP\n' \
-        'M=M-1\n' \
-        'A=M\n' \
-        'A=M\n' \
-        'D=D+A\n' \
-        '@SP\n' \
-        'A=M\n' \
-        'M=D\n' \
-        '@SP\n' \
-        'M=M+1\n'
-        '''
 
     return output
 
