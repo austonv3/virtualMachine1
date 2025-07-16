@@ -1,45 +1,29 @@
-''' Current code: StackTest
-// Executes a sequence of arithmetic and logical operations on the stack.
-
-push constant 17
-push constant 17
-eq
-push constant 17
-push constant 16
-eq
-push constant 16
-push constant 17
-eq
-push constant 892
-push constant 891
-lt
-push constant 891
-push constant 892
-lt
-push constant 891
-push constant 891
-lt
-push constant 32767
-push constant 32766
-gt
-push constant 32766
-push constant 32767
-gt
-push constant 32766
-push constant 32766
-gt
-push constant 57
-push constant 31
-push constant 53
+'''Current Code: BasicTest
+push constant 10
+pop local 0
+push constant 21
+push constant 22
+pop argument 2
+pop argument 1
+push constant 36
+pop this 6
+push constant 42
+push constant 45
+pop that 5
+pop that 2
+push constant 510
+pop temp 6
+push local 0
+push that 5
 add
-push constant 112
+push argument 1
 sub
-neg
-and
-push constant 82
-or
-not
-'''
+push this 6
+push this 6
+add
+sub
+push temp 6
+add'''
 
 def pop(targetRegister):
     output = '@SP\n' \
@@ -52,6 +36,19 @@ def pop(targetRegister):
     else:
         raise Exception('Sorry, the strings "A" and "D" are the only valid inputs')
     return output
+
+def push(segment='None', index='None'):
+    output = ''
+    if segment == 'constant':
+        output += '@%s\n' \
+        'D=A\n' % index
+    output += '@SP\n' \
+    'A=M\n' \
+    'M=D\n' \
+    '@SP\n' \
+    'M=M+1\n'
+    return output
+
 
 def Parser(line):
     commandType = str()
@@ -74,33 +71,15 @@ def CodeWriter(command, linecount):
     output = ''
 
     if command[0] == 'C_PUSH':
-        segment = command[1] #doesn't actually need to do anything when using the constant segment. Might need some extra logic for that in the future...
-        index = command[2]
-        output += '@%s\n' \
-        'D=A\n' \
-        '@SP\n' \
-        'A=M\n' \
-        'M=D\n' \
-        '@SP\n' \
-        'M=M+1\n' % index
+        output += push(command[1], command[2])
         return output
 
     match command[1]:
         case 'add':
-            output += pop('D') + pop('A') + 'D=D+A\n' \
-            '@SP\n' \
-            'A=M\n' \
-            'M=D\n' \
-            '@SP\n' \
-            'M=M+1\n'
+            output += pop('D') + pop('A') + 'D=D+A\n' + push()
 
         case 'sub':
-            output += pop('D') + pop('A') + 'D=A-D\n' \
-            '@SP\n' \
-            'A=M\n' \
-            'M=D\n' \
-            '@SP\n' \
-            'M=M+1\n'''
+            output += pop('D') + pop('A') + 'D=A-D\n' + push()
 
         case 'neg':
             output += pop('D') + 'M=-D\n' \
