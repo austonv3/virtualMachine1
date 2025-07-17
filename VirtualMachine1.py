@@ -74,6 +74,10 @@ def CodeWriter(command, linecount):
         output += push(command[1], command[2])
         return output
 
+    #sets target ram to 0 if comparison failed or -1 if comparison succeeded
+    comparisonFailed = '@SP\n' + 'A=M\n' + 'M=0\n' + '@SP\n' + 'M=M+1\n' + f'@FINISH{linecount}\n' + '0;JMP\n'
+    comparisonSuccess = '@SP\n' + 'A=M\n' + 'M=-1\n' + '@SP\n' + 'M=M+1\n' + f'(FINISH{linecount})\n'
+
     match command[1]:
         case 'add':
             output += pop('D') + pop('A') + 'D=D+A\n' + push()
@@ -88,77 +92,33 @@ def CodeWriter(command, linecount):
 
         #comparisons: -1 = true, 0 = false
         case 'eq':
-            output += pop('D') + pop('A') + 'D=A-D\n' \
-              f'@EQ{linecount}\n' \
-              'D;JEQ\n' \
-              '@SP\n' \
-              'A=M\n' \
-              'M=0\n' \
-              '@SP\n' \
-              'M=M+1\n' \
-              f'@FINISH{linecount}\n' \
-              '0;JMP\n' \
-              f'(EQ{linecount})\n' \
-              '@SP\n' \
-              'A=M\n' \
-              'M=-1\n' \
-              '@SP\n' \
-              'M=M+1\n' \
-              f'(FINISH{linecount})\n'
+            output += \
+                (
+                    pop('D') + pop('A') + 'D=A-D\n' + f'@EQ{linecount}\n' + 'D;JEQ\n' +
+                    comparisonFailed + f'(EQ{linecount})\n' + comparisonSuccess
+                )
+
 
         case 'gt':
-            output += pop('D') + pop('A') + 'D=A-D\n' \
-                      f'@GT{linecount}\n' \
-                      'D;JGT\n' \
-                      '@SP\n' \
-                      'A=M\n' \
-                      'M=0\n' \
-                      '@SP\n' \
-                      'M=M+1\n' \
-                      f'@FINISH{linecount}\n' \
-                      '0;JMP\n' \
-                      f'(GT{linecount})\n' \
-                      '@SP\n' \
-                      'A=M\n' \
-                      'M=-1\n' \
-                      '@SP\n' \
-                      'M=M+1\n' \
-                      f'(FINISH{linecount})\n'
+            output += \
+            (
+                pop('D') + pop('A') + 'D=A-D\n' f'@GT{linecount}\n' + 'D;JGT\n' +
+                comparisonFailed + f'(GT{linecount})\n' + comparisonSuccess
+            )
+
 
         case 'lt':
-            output += pop('D') + pop('A') + 'D=A-D\n' \
-                      f'@LT{linecount}\n' \
-                      'D;JLT\n' \
-                      '@SP\n' \
-                      'A=M\n' \
-                      'M=0\n' \
-                      '@SP\n' \
-                      'M=M+1\n' \
-                      f'@FINISH{linecount}\n' \
-                      '0;JMP\n' \
-                      f'(LT{linecount})\n' \
-                      '@SP\n' \
-                      'A=M\n' \
-                      'M=-1\n' \
-                      '@SP\n' \
-                      'M=M+1\n' \
-                      f'(FINISH{linecount})\n'
+            output += \
+                (
+                        pop('D') + pop('A') + 'D=A-D\n' +f'@LT{linecount}\n' + 'D;JLT\n' +
+                        comparisonFailed + f'(LT{linecount})\n' + comparisonSuccess
+                )
 
         case 'and':
-            output += pop('D') + pop('A') + 'D=D&A\n' \
-            '@SP\n' \
-            'A=M\n' \
-            'M=D\n' \
-            '@SP\n' \
-            'M=M+1\n'''
+            output += pop('D') + pop('A') + 'D=D&A\n' + push()
 
         case 'or':
-            output += pop('D') + pop('A') + 'D=D|A\n' \
-              '@SP\n' \
-              'A=M\n' \
-              'M=D\n' \
-              '@SP\n' \
-              'M=M+1\n'
+            output += pop('D') + pop('A') + 'D=D|A\n' + push()
 
         case 'not':
             output += pop('D') + 'D=!D\n' \
