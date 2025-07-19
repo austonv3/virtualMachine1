@@ -75,8 +75,14 @@ def CodeWriter(command, linecount):
         return output
 
     #sets target ram to 0 if comparison failed or -1 if comparison succeeded
-    comparisonFailed = '@SP\n' + 'A=M\n' + 'M=0\n' + '@SP\n' + 'M=M+1\n' + f'@FINISH{linecount}\n' + '0;JMP\n'
-    comparisonSuccess = '@SP\n' + 'A=M\n' + 'M=-1\n' + '@SP\n' + 'M=M+1\n' + f'(FINISH{linecount})\n'
+    ramSetStart = '@SP\n' + 'A=M\n'
+    ramSetEnd = '@SP\n' + 'M=M+1\n'
+    falseValue = 'M=0\n'
+    trueValue = 'M=-1\n'
+    jumpStatement = f'@FINISH{linecount}\n' + '0;JMP\n'
+    jumpTarget = f'(FINISH{linecount})\n'
+    comparisonFailed =  ramSetStart + falseValue + ramSetEnd + jumpStatement
+    comparisonSuccess = ramSetStart + trueValue + ramSetEnd + jumpTarget
 
     match command[1]:
         case 'add':
