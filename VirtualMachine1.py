@@ -1,3 +1,4 @@
+from collections import defaultdict
 '''Current Code: BasicTest
 push constant 10
 pop local 0
@@ -66,25 +67,19 @@ def Parser(line):
 
     return commandType, arg1, arg2
 
-def CodeWriter(command, linecount):
-
+def c_arithmetic(command, linecount):
     output = ''
-
-    if command[0] == 'C_PUSH':
-        output += push(command[1], command[2])
-        return output
-
-    #sets target ram to 0 if comparison failed or -1 if comparison succeeded
+    # sets target ram to 0 if comparison failed or -1 if comparison succeeded
     ramSetStart = '@SP\n' + 'A=M\n'
     ramSetEnd = '@SP\n' + 'M=M+1\n'
     falseValue = 'M=0\n'
     trueValue = 'M=-1\n'
     jumpStatement = f'@FINISH{linecount}\n' + '0;JMP\n'
     jumpTarget = f'(FINISH{linecount})\n'
-    comparisonFailed =  ramSetStart + falseValue + ramSetEnd + jumpStatement
-    comparisonSuccess = ramSetStart + trueValue + ramSetEnd + jumpTarget
 
-    match command[1]:
+    comparisonFailed = ramSetStart + falseValue + ramSetEnd + jumpStatement
+    comparisonSuccess = ramSetStart + trueValue + ramSetEnd + jumpTarget
+    match command:
         case 'add':
             output += pop('D') + pop('A') + 'D=D+A\n' + push()
 
@@ -92,31 +87,27 @@ def CodeWriter(command, linecount):
             output += pop('D') + pop('A') + 'D=A-D\n' + push()
 
         case 'neg':
-            output += pop('D') + 'M=-D\n' \
-            '@SP' + '\n' \
-            'M=M+1' + '\n'
+            output += pop('D') + 'M=-D\n' +'@SP' + '\n' + 'M=M+1' + '\n'
 
-        #comparisons: -1 = true, 0 = false
+        # comparisons: -1 = true, 0 = false
         case 'eq':
             output += \
                 (
-                    pop('D') + pop('A') + 'D=A-D\n' + f'@EQ{linecount}\n' + 'D;JEQ\n' +
-                    comparisonFailed + f'(EQ{linecount})\n' + comparisonSuccess
+                        pop('D') + pop('A') + 'D=A-D\n' + f'@EQ{linecount}\n' + 'D;JEQ\n' +
+                        comparisonFailed + f'(EQ{linecount})\n' + comparisonSuccess
                 )
-
 
         case 'gt':
             output += \
-            (
-                pop('D') + pop('A') + 'D=A-D\n' f'@GT{linecount}\n' + 'D;JGT\n' +
-                comparisonFailed + f'(GT{linecount})\n' + comparisonSuccess
-            )
-
+                (
+                        pop('D') + pop('A') + 'D=A-D\n' f'@GT{linecount}\n' + 'D;JGT\n' +
+                        comparisonFailed + f'(GT{linecount})\n' + comparisonSuccess
+                )
 
         case 'lt':
             output += \
                 (
-                        pop('D') + pop('A') + 'D=A-D\n' +f'@LT{linecount}\n' + 'D;JLT\n' +
+                        pop('D') + pop('A') + 'D=A-D\n' + f'@LT{linecount}\n' + 'D;JLT\n' +
                         comparisonFailed + f'(LT{linecount})\n' + comparisonSuccess
                 )
 
@@ -127,11 +118,18 @@ def CodeWriter(command, linecount):
             output += pop('D') + pop('A') + 'D=D|A\n' + push()
 
         case 'not':
-            output += pop('D') + 'D=!D\n' \
-            'M=D\n' \
-            '@SP\n' \
-            'M=M+1\n'
+            output += pop('D') + 'D=!D\n' +'M=D\n' + '@SP\n' + 'M=M+1\n'
+    return output
 
+def CodeWriter(command, linecount):
+
+    output = ''
+
+    dispatch_table = defaultdict(list)
+    dispatch_table['C_PUSH'].append(push(command[1], command[2]))
+    dispatch_table['C_ARITHMETIC'].append(c_arithmetic(command[1], linecount))
+
+    output = dispatch_table[command[0]]
     return output
 
 def EndCode():
@@ -149,8 +147,8 @@ def VMTranslator():
                 command = Parser(line)
                 if command:
                     output = CodeWriter(command, lineCount)
-                if output:
-                    machineCode.write(output)
+                for item in output:
+                    machineCode.write(item)
             end = EndCode()
             machineCode.write(end)
     return
