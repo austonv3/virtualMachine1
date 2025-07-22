@@ -25,7 +25,6 @@ add
 sub
 push temp 6
 add'''
-
 def pop(targetRegister):
     output = '@SP\n' \
     'M=M-1\n' \
@@ -38,16 +37,54 @@ def pop(targetRegister):
         raise Exception('Sorry, the strings "A" and "D" are the only valid inputs')
     return output
 
+def c_pop(segment, index):
+    output = ''
+    memory = '@R13\n'
+    temp = '@5\n'
+    output += f'@{index}\n' + 'D=A\n'
+    match segment:
+        case 'argument':
+            output += '@ARG\n'
+        case 'local':
+            output += '@LCL\n'
+        case 'this':
+            output += '@THIS\n'
+        case 'that':
+            output += '@THAT\n'
+        case 'temp':
+            output += temp + 'D=D+A\n' + memory + 'M=D\n' +pop('D') + memory + 'A=M\n' + 'M=D\n'
+            return output
+        case 'static':
+            pass
+        case 'pointer':
+            pass
+    output += 'A=M\n' + 'D=D+A\n' + memory + 'M=D\n' + pop('D') + memory + 'A=M\n' + 'M=D\n'
+    return output
+
 def push(segment='None', index='None'):
     output = ''
-    if segment == 'constant':
-        output += '@%s\n' \
-        'D=A\n' % index
-    output += '@SP\n' \
-    'A=M\n' \
-    'M=D\n' \
-    '@SP\n' \
-    'M=M+1\n'
+    memory = '@R13\n'
+    temp = '@5\n'
+    if index != 'None':
+        output += f'@{index}\n' + 'D=A\n'
+    match segment:
+        case 'constant':
+            ...
+        case 'local':
+            output += '@LCL\n' + 'A=D+M\n' + 'D=M\n'
+        case 'this':
+            output += '@THIS\n' + 'A=D+M\n' + 'D=M\n'
+        case 'that':
+            output += '@THAT\n' + 'A=D+M\n' + 'D=M\n'
+        case 'argument':
+            output += '@ARG\n' + 'A=D+M\n' + 'D=M\n'
+        case 'temp':
+            output += temp + 'A=D+A\n' + 'D=M\n'
+        case 'pointer':
+            pass
+        case 'static':
+            pass
+    output += '@SP\n' + 'A=M\n' + 'M=D\n' + '@SP\n' +'M=M+1\n'
     return output
 
 
@@ -59,6 +96,10 @@ def Parser(line):
         arguments = line[:-1].split(' ')
         if arguments[0] == 'push':
             commandType = 'C_PUSH'
+            arg1 = arguments[1]
+            arg2 = arguments[2]
+        elif arguments[0] == 'pop':
+            commandType = 'C_POP'
             arg1 = arguments[1]
             arg2 = arguments[2]
         else:
@@ -128,6 +169,7 @@ def CodeWriter(command, linecount):
     dispatch_table = defaultdict(list)
     dispatch_table['C_PUSH'].append(push(command[1], command[2]))
     dispatch_table['C_ARITHMETIC'].append(c_arithmetic(command[1], linecount))
+    dispatch_table['C_POP'].append(c_pop(command[1], command[2]))
 
     output = dispatch_table[command[0]]
     return output
