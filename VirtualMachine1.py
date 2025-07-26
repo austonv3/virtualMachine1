@@ -1,30 +1,22 @@
 from collections import defaultdict
-'''Current Code: BasicTest
-push constant 10
-pop local 0
-push constant 21
-push constant 22
-pop argument 2
-pop argument 1
-push constant 36
-pop this 6
-push constant 42
-push constant 45
-pop that 5
-pop that 2
-push constant 510
-pop temp 6
-push local 0
-push that 5
+'''Current Code: PointerTest
+push constant 3030
+pop pointer 0
+push constant 3040
+pop pointer 1
+push constant 32
+pop this 2
+push constant 46
+pop that 6
+push pointer 0
+push pointer 1
 add
-push argument 1
+push this 2
 sub
-push this 6
-push this 6
-add
-sub
-push temp 6
+push that 6
 add'''
+filename = ''
+
 def pop(targetRegister):
     output = '@SP\n' \
     'M=M-1\n' \
@@ -38,6 +30,7 @@ def pop(targetRegister):
     return output
 
 def c_pop(segment, index):
+    global filename
     output = ''
     memory = '@R13\n'
     temp = '@5\n'
@@ -55,20 +48,26 @@ def c_pop(segment, index):
             output += temp + 'D=D+A\n' + memory + 'M=D\n' +pop('D') + memory + 'A=M\n' + 'M=D\n'
             return output
         case 'static':
-            pass
+            output = pop('D') + f'@{filename}.{index}\n' + 'M=D\n'
+            return output
         case 'pointer':
-            pass
+            if index == '0':
+                output = pop('D') + '@THIS\n' + 'M=D\n'
+            else:
+                output = pop('D') + '@THAT\n' + 'M=D\n'
+            return output
     output += 'A=M\n' + 'D=D+A\n' + memory + 'M=D\n' + pop('D') + memory + 'A=M\n' + 'M=D\n'
     return output
 
 def push(segment='None', index='None'):
+    global filename
     output = ''
     memory = '@R13\n'
     temp = '@5\n'
     if index != 'None':
         output += f'@{index}\n' + 'D=A\n'
     match segment:
-        case 'constant':
+        case 'constant': #think I can just delete this.
             ...
         case 'local':
             output += '@LCL\n' + 'A=D+M\n' + 'D=M\n'
@@ -81,9 +80,12 @@ def push(segment='None', index='None'):
         case 'temp':
             output += temp + 'A=D+A\n' + 'D=M\n'
         case 'pointer':
-            pass
+            if index == '0':
+                output = '@THIS\n' + 'D=M\n'
+            elif index == '1':
+                output = '@THAT\n' + 'D=M\n'
         case 'static':
-            pass
+            output = f'@{filename}.{index}\n' + 'D=M\n'
     output += '@SP\n' + 'A=M\n' + 'M=D\n' + '@SP\n' +'M=M+1\n'
     return output
 
@@ -181,6 +183,7 @@ def EndCode():
     return end
 
 def VMTranslator():
+    global filename
     filename = input("Please input file name without extension: ")
     output = ''
     with open(filename + ".vm", 'r') as bytecode:
